@@ -1,0 +1,3 @@
+fastecdsa
+bitarray
+gmpy2
