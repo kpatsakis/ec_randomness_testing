@@ -31,7 +31,7 @@ def rnd_multpoint25519(UB):
 
 def TestCurve25519(TESTS):
     TESTS = FixTests(TESTS, 255)
-    prefix = "ED25519"
+    prefix = "Ed25519"
     p = 2**255 - 19
     pl = Pool(8)
     lst = [p] * TESTS
