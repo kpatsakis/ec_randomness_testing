@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from random import randrange
 from fastecdsa import curve
-from fastecdsa.curve import P192, P224, P256, P521, P384, secp192k1, secp224k1, secp256k1
+from fastecdsa.curve import P192, P224, P256, P521, P384, secp192k1, secp224k1, secp256k1, brainpoolP160r1, brainpoolP192r1, brainpoolP224r1, brainpoolP256r1, brainpoolP320r1, brainpoolP384r1, brainpoolP512r1
 from fastecdsa.point import Point
 from ed25519 import *
 from multiprocessing import Pool
@@ -51,27 +51,13 @@ def rnd_multpoint(l):
 
 
 def test_curve(c, TESTS):
-    if c == "Curve25519":
+    if c == "ed25519":
         TESTS = FixTests(TESTS, 255)
         TestCurve25519(TESTS)
         return True
     else:
-        if c == "P192":
-            E = curve.P192
-        elif c == "P224":
-            E = curve.P224
-        elif c == "P256":
-            E = curve.P256
-        elif c == "P384":
-            E = curve.P384
-        elif c == "P521":
-            E = curve.P521
-        elif c == "secp192k1":
-            E = curve.secp192k1
-        elif c == "secp224k1":
-            E = curve.secp224k1
-        elif c == "secp256k1":
-            E = curve.secp256k1
+        # let's use eval for now
+        E = eval("curve." + c)
     x, y, p = E.gx, E.gy, E.p
     L = len(bin(p)) - 2
     TESTS = FixTests(TESTS, L)
@@ -126,12 +112,33 @@ def filesaver(barray, L, prefix):
     return True
 
 
+ed = ["ed25519"]
+NIST = ["P192", "P224", "P256", "P384", "P521"]
+Certicom = ["secp256k1", "secp192k1", "secp224k1"]
+BSI = ["brainpoolP160r1", "brainpoolP192r1", "brainpoolP224r1",
+       "brainpoolP256r1", "brainpoolP320r1", "brainpoolP384r1", "brainpoolP512r1"]
 parser = argparse.ArgumentParser(
-    prog='CurveTester', description='Collects statistics by computing random points on elliptic curves Ed25519, P256, P384, and P521. All statistics are saved in raw files, overwriting existing ones. If you ask for for many tests, this would be a slow process, so better grab a coffee.')
-parser.add_argument('-t', '--tests', type=int, default=10000,
+    prog='CurveTester', description='Collects statistics by computing random points on elliptic curves. By default no curve is selected, check syntax on how to enable them. All statistics are saved in raw files, overwriting existing ones. If you ask for for many testsW, this would be a slow process, so better grab a coffee.')
+parser.add_argument('-t', '--tests', type=int, default=1000,
                     help='Minimum tests to perform, default set to 1000.')
-
+parser.add_argument("--BSI", action='store_true', default=False,
+                    dest='use_bsi', help="Use the BSI curves, default is False.")
+parser.add_argument("--CRT", action='store_true', default=False,
+                    dest='use_cert', help="Use the Certicom curves, default is False.")
+parser.add_argument("--ed", action='store_true', default=False,
+                    dest='use_ed', help="Use the Ed25519 curve, default is False.")
+parser.add_argument("--NIST", action='store_true', default=False,
+                    dest='use_nist', help="Use the NIST curves, default is False.")
 args = parser.parse_args()
-for ec in ["Curve25519", "P192", "P224", "P256", "P384", "P521", "secp256k1", "secp192k1", "secp224k1"]:
+crvs = []
+if args.use_bsi:
+    crvs += BSI
+if args.use_nist:
+    crvs += NIST
+if args.use_cert:
+    crvs += Certicom
+if args.use_ed:
+    crvs += ed
+for ec in crvs:
     print ("Working with curve: %s..." % ec)
     test_curve(ec, args.tests)
